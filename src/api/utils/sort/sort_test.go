@@ -1,34 +1,81 @@
 package sort
 
 import (
-	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
-func TestBubbleSortOrderDESC(t *testing.T) {
-	// Init
-	elements := []int{9, 7, 5, 3, 1, 2, 4, 6, 8, 0}
-	fmt.Println(elements)
+func TestBubbleSortIncreasingOrder(t *testing.T) {
+	elements := GetElements(10)
 
-	// Execution
+	assert.NotNil(t, elements)
+	assert.EqualValues(t, 10, len(elements))
+	assert.EqualValues(t, 9, elements[0])
+	assert.EqualValues(t, 0, elements[len(elements)-1])
+
 	BubbleSort(elements)
 
-	//Validation
-	if elements[0] != 9 {
-		t.Error("First element should be 9")
-	}
-
-	if elements[len(elements)-1] != 0{
-		t.Error("Last element should be 0")
-	}
-	fmt.Println(elements)
+	assert.NotNil(t, elements)
+	assert.EqualValues(t, 10, len(elements))
+	assert.EqualValues(t, 0, elements[0])
+	assert.EqualValues(t, 9, elements[len(elements)-1])
 }
 
-func TestBubbleSortAlreadySorted(t *testing.T) {
-	// Init
-	elements := []int{7,6,5,4,3,2,1,0}
+func TestSortIncreasingOrder(t *testing.T) {
+	elements := GetElements(10)
 
-	// Execution
-	BubbleSort(elements)
+	Sort(elements)
 
+	assert.EqualValues(t, 0, elements[0], "First element should be 0")
+	assert.EqualValues(t, 9, elements[len(elements)-1], "Last element should be 9")
+
+}
+
+func BenchmarkBubbleSort(b *testing.B) {
+	elements := GetElements(10000)
+
+	for i := 0; i < b.N; i++ {
+		BubbleSort(elements)
+	}
+}
+
+func BenchmarkSort(b *testing.B) {
+	elements := GetElements(10000)
+
+	for i := 0; i < b.N; i++ {
+		Sort(elements)
+	}
+}
+
+func TestBubbleSortIncreasingOrderWithTimeout(t *testing.T) {
+	elements := GetElements(10)
+
+	assert.NotNil(t, elements)
+	assert.EqualValues(t, 10, len(elements))
+	assert.EqualValues(t, 9, elements[0])
+	assert.EqualValues(t, 0, elements[len(elements)-1])
+
+	timeoutChan := make(chan bool, 1)
+	defer close(timeoutChan)
+
+	go func() {
+		BubbleSort(elements)
+		timeoutChan <- false
+	}()
+
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		timeoutChan <- true
+	}()
+
+	if <-timeoutChan {
+		assert.Fail(t, "Bubble sort took more than 500 ms")
+		return
+	}
+
+	assert.NotNil(t, elements)
+	assert.EqualValues(t, 10, len(elements))
+	assert.EqualValues(t, 0, elements[0])
+	assert.EqualValues(t, 9, elements[len(elements)-1])
 }
